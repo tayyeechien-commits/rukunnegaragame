@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ujian Jutawan Rukun Negara - Cari Harta Karun</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@700;800;900&display=swap');
+
+        :root {
+            --gold: #ffd700;
+            --gold-dark: #b8860b;
+            --dirt: #8b4513;
+            --dirt-dark: #3e2723;
+            --grass: #2ecc71;
+            --sky: #1e3c72;
+            --sky-light: #2a5298;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --btn-bg: rgba(20, 20, 30, 0.95);
+        }
+
+        body {
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+            background: linear-gradient(135deg, var(--sky), var(--sky-light));
+            margin: 0; padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex; flex-direction: column;
+            color: #333;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .cloud {
+            position: absolute; background: rgba(255, 255, 255, 0.2); 
+            border-radius: 50px; opacity: 0.5; 
+            animation: moveCloud linear infinite; z-index: 0;
+            pointer-events: none;
+        }
+        @keyframes moveCloud { from { transform: translateX(-200px); } to { transform: translateX(100vw); } }
+
+        /* Skrin Mula & Borang Penilaian Murid */
+        #start-screen {
+            position: fixed; inset: 0; background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; color: var(--gold); padding: 15px; text-align: center;
+        }
+
+        .game-title-glow {
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 4px 4px 0px #000;
+            animation: pulseGlow 2s infinite alternate;
+        }
+        @keyframes pulseGlow { 
+            from { transform: scale(1); } 
+            to { transform: scale(1.02); } 
+        }
+
+        /* Modern Glowing Button */
+        .btn-modern {
+            position: relative;
+            background: var(--btn-bg);
+            color: var(--gold);
+            padding: 3px;
+            border-radius: 100px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            z-index: 50;
+        }
+
+        .btn-modern::before {
+            content: ""; position: absolute; inset: -3px;
+            border-radius: 100px;
+            background: linear-gradient(45deg, #b8860b, #ffd700, #fff, #ffd700, #b8860b);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            background-size: 300% 300%;
+            animation: moveGradient 3s ease infinite;
+            z-index: 1;
+        }
+
+        .btn-text {
+            position: relative; z-index: 5; background: #111827;
+            padding: 8px 24px; border-radius: 100px;
+            width: 100%; height: 100%; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+            pointer-events: none;
+        }
+
+        @keyframes moveGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .btn-modern:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 12px 30px rgba(255, 215, 0, 0.5); }
+
+        .instruction-box {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            padding: 10px 16px;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            max-width: 480px; color: #f3f4f6;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: left;
+        }
+
+        /* Area Penggalian Tanah */
+        .dig-area-wrapper {
+            position: relative; width: 100%;
+            background: var(--dirt-dark);
+            border-top: 5px solid #15803d;
+            box-shadow: inset 0 8px 15px rgba(0,0,0,0.6);
+            padding: 8px;
+            height: 22vh;
+            display: flex; flex-direction: column;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .dirt-mound {
+            width: 90px; height: 60px;
+            background: radial-gradient(circle at 50% 20%, #8d6e63 0%, #4e342e 70%, #3e2723 100%);
+            border-radius: 50px 50px 12px 12px;
+            position: relative; cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #5d4037;
+            animation: breatheMound 3s infinite ease-in-out;
+            touch-action: manipulation;
+        }
+        @keyframes breatheMound { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+        .dirt-mound:hover { filter: brightness(1.15); transform: scale(1.06); }
+        .dirt-mound::after {
+            content: '⛏️'; position: absolute; top: -20px; opacity: 0;
+            font-size: 24px; transition: all 0.2s; pointer-events: none;
+        }
+        .dirt-mound:hover::after { opacity: 1; top: -26px; }
+
+        /* Kad Harta Karun */
+        .treasure-card {
+            background: var(--card-bg);
+            border: 2px solid var(--gold-dark);
+            border-radius: 10px; padding: 6px 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: grab; transition: all 0.2s ease;
+            position: relative; touch-action: manipulation;
+        }
+        .treasure-card.selected-card {
+            outline: 3px solid #f59e0b;
+            box-shadow: 0 0 12px #ffd700;
+            transform: scale(1.02);
+        }
+
+        /* Slot Padanan Jawapan */
+        .drop-slot {
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px dashed rgba(255, 215, 0, 0.5);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            position: relative; padding: 4px;
+        }
+        .drop-slot.drag-over { background: rgba(255, 215, 0, 0.25); border-color: var(--gold); }
+        .drop-slot.filled { border-style: solid; background: rgba(255, 255, 255, 0.2); }
+
+        .correct-anim { animation: pulseGreen 0.6s ease-in-out; border-color: #22c55e !important; background: rgba(34, 197, 94, 0.25) !important; }
+        @keyframes pulseGreen { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+
+        .wrong-anim { animation: shakeRed 0.5s ease-in-out; border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.25) !important; }
+        @keyframes shakeRed { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+        .loosening { animation: loosen 0.4s forwards; }
+        @keyframes loosen { 0% { transform: scale(1); } 100% { transform: scale(0); opacity: 0; } }
+
+        #victory-rain { position: fixed; inset: 0; pointer-events: none; z-index: 2000; display: none; }
+        .coin { position: absolute; font-size: 38px; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- Fail Audio (Sebenar) -->
+    <audio id="bgm" src="bgm.mp3" loop></audio>
+    <audio id="click-sound" src="click.mp3"></audio>
+    <audio id="dig-sound" src="dig.mp3"></audio>
+    <audio id="win-sound" src="win.mp3"></audio>
+    <audio id="coins-sound" src="coins_clinking.mp3"></audio>
+
+    <!-- Cloud Background -->
+    <div class="cloud" style="top:2%; height:30px; width:100px; animation-duration: 28s;"></div>
+    <div class="cloud" style="top:10%; height:45px; width:140px; animation-duration: 36s;"></div>
+
+    <!-- Start Screen: Input Murid & Arahan -->
+    <div id="start-screen">
+        <div class="max-w-md w-full flex flex-col items-center gap-1.5">
+            <div class="text-4xl">🇲🇾 💎 ⛏️</div>
+            <h1 class="game-title-glow text-yellow-400">JUTAWAN RUKUN NEGARA</h1>
+            <p class="text-xs md:text-sm text-yellow-200 font-semibold">Ujian Penilaian Akademik Mengikut Subtopik</p>
+
+            <!-- Borang Murid -->
+            <div class="w-full bg-slate-900/90 border-2 border-yellow-500/50 p-3 rounded-xl text-left space-y-1.5">
+                <h3 class="text-yellow-400 font-bold text-center border-b border-yellow-500/30 pb-0.5 text-xs">📋 Maklumat Penilaian Murid</h3>
+                <div>
+                    <label class="text-[10px] text-gray-300 font-bold block mb-0.5">Nama Murid:</label>
+                    <input type="text" id="student-name" placeholder="Masukkan Nama Penuh..." class="w-full px-2.5 py-1 rounded-lg bg-slate-800 border border-yellow-500/40 text-white text-xs outline-none focus:border-yellow-400">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-300 font-bold block mb-0.5">Kelas:</label>
+                    <input type="text" id="student-class" placeholder="Contoh: 6 Gemilang..." class="w-full px-2.5 py-1 rounded-lg bg-slate-800 border border-yellow-500/40 text-white text-xs outline-none focus:border-yellow-400">
+                </div>
+            </div>
+
+            <div class="instruction-box">
+                <h3 class="text-xs font-bold text-yellow-400 border-b border-yellow-500/40 pb-0.5 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-scroll"></i> Peraturan Ujian Subtopik & Denda RM 2
+                </h3>
+                <ol class="space-y-0.5 text-[10px] md:text-[11px] list-decimal pl-4 text-gray-200">
+                    <li>Ujian mengandungi <b>5 Peringkat Subtopik</b> akademik.</li>
+                    <li>Gali tanah di bawah untuk melepaskan kad fakta tanpa sebarang klu.</li>
+                    <li>Suaikan kad jawapan dengan soalan subtopik di atas.</li>
+                    <li>Setiap kesalahan jawapan akan <b>MENOLAK RM 2 = 2 MARKAH (-RM 2)</b> daripada markah penuh 100!</li>
+                </ol>
+            </div>
+
+            <button class="btn-modern mt-1" onclick="playClick(); validateAndStart();">
+                <span class="btn-text">
+                    <i class="fa-solid fa-gem text-yellow-400"></i> Mula Aktiviti ⛏️
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container Permainan (100vh Full Frame) -->
+    <div id="game-container" class="max-w-5xl mx-auto w-full h-full flex flex-col justify-between p-2 relative z-10 box-border">
+
+        <!-- Header Panel -->
+        <header class="bg-slate-900/90 backdrop-blur-md rounded-xl p-2 border border-yellow-500/40 text-white shadow-xl h-[11vh] flex flex-col justify-center">
+            <div class="flex justify-between items-center gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🏛️</span>
+                    <div>
+                        <h2 id="stage-title" class="text-xs md:text-sm font-black text-yellow-400 uppercase tracking-wider leading-tight">
+                            Peringkat 1: Latar Belakang Rukun Negara
+                        </h2>
+                        <p id="stage-desc" class="text-[10px] text-gray-300 leading-tight">
+                            Gali dan padankan kenyataan fakta sejarah Rukun Negara.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dashboard Skor -->
+                <div class="flex items-center gap-2">
+                    <div class="bg-slate-800 px-2 py-1 rounded-lg border border-yellow-500/30 text-center">
+                        <span class="text-[9px] text-gray-400 block font-bold leading-none">Skor Markah</span>
+                        <span id="score-display" class="text-xs font-black text-yellow-400">RM 100</span>
+                    </div>
+
+                    <div class="bg-slate-800 px-2 py-1 rounded-lg border border-yellow-500/30 text-center">
+                        <span class="text-[9px] text-gray-400 block font-bold leading-none">Peringkat</span>
+                        <span id="stage-number" class="text-xs font-black text-green-400">1 / 5</span>
+                    </div>
+
+                    <button onclick="playClick(); toggleMute()" class="bg-slate-800 p-1.5 rounded-lg border border-gray-600 text-yellow-400 text-xs">
+                        <i id="mute-icon" class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Question Prompt Area -->
+        <div class="bg-slate-900/90 border border-yellow-500/40 rounded-lg p-1 text-center shadow-lg h-[5vh] flex items-center justify-center my-0.5">
+            <p id="question-prompt" class="text-[10px] md:text-xs font-bold text-yellow-200">
+                Gali tanah di bawah untuk mengeluarkan kad fakta ujian!
+            </p>
+        </div>
+
+        <!-- Drop Zone Container / Slot Jawapan -->
+        <div id="drop-slots-container" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 h-[34vh] overflow-y-auto pr-1">
+            <!-- Slots dibina melalui JS -->
+        </div>
+
+        <!-- Holding Area -->
+        <div id="holding-area-wrapper" class="bg-slate-900/70 rounded-xl p-1 border border-slate-700/60 h-[13vh] flex flex-col justify-center">
+            <div class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 flex items-center gap-1">
+                <i class="fa-solid fa-box-open text-yellow-400"></i> SIMPANAN KAD DIGALI (KETIK KAD ➔ KETIK SLOT):
+            </div>
+            <div id="holding-area" class="flex flex-wrap gap-1 justify-center items-center overflow-y-auto max-h-[8vh]">
+                <span class="text-[10px] text-gray-400 italic" id="empty-holding-msg">Gali tanah untuk menemui kad fakta!</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons Area -->
+        <div id="action-zone" class="h-[7vh] flex justify-center items-center relative z-50 my-0.5">
+            <button id="check-btn" class="btn-modern" style="display: none;" onclick="playClick(); checkAnswers();">
+                <span class="btn-text text-xs">
+                    <i class="fa-solid fa-coins text-yellow-400"></i> Semak Jawapan & Jana Wang! 💰
+                </span>
+            </button>
+            <button id="next-btn" class="btn-modern" style="display: none;" onclick="playClick(); nextStage();">
+                <span class="btn-text text-xs">
+                    <i class="fa-solid fa-circle-arrow-right text-green-400"></i> Subtopik Seterusnya ➔
+                </span>
+            </button>
+        </div>
+
+        <!-- Kawasan Penggalian Tanah -->
+        <section class="dig-area-wrapper rounded-xl">
+            <div class="text-center mb-0.5">
+                <span class="text-[9px] font-black uppercase tracking-wider text-yellow-200/90 bg-black/50 px-2 py-0.5 rounded-full border border-yellow-500/30">
+                    <i class="fa-solid fa-shovel"></i> KAWASAN PENGGALIAN TANAH
+                </span>
+            </div>
+            <div id="mounds-container" class="flex flex-wrap justify-center items-center gap-2 md:gap-4">
+                <!-- Dirt mounds generated via JS -->
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modal Keputusan Penilaian Akhir -->
+    <div id="assessment-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[3000] flex items-center justify-center p-3" style="display: none;">
+        <div class="bg-slate-900 border-4 border-yellow-400 rounded-2xl p-4 max-w-md w-full text-center shadow-2xl relative">
+            <div class="text-4xl mb-1">📜 💰 🇲🇾</div>
+            <h2 class="text-xl font-black text-yellow-400 mb-1">LAPORAN PENILAIAN RUKUN NEGARA</h2>
+            <p class="text-gray-300 text-xs mb-3">Kesemua 5 Subtopik Rukun Negara Telah Selesai Diuji.</p>
+
+            <div class="bg-slate-800 rounded-xl p-3 border border-yellow-500/30 text-left space-y-1.5 mb-3 text-xs text-gray-200">
+                <p><b>Nama Murid:</b> <span id="res-name" class="text-yellow-300">-</span></p>
+                <p><b>Kelas:</b> <span id="res-class" class="text-yellow-300">-</span></p>
+                <p><b>Jumlah Kesalahan:</b> <span id="res-wrong" class="text-red-400 font-bold">0</span> kali (-<span id="res-deduction" class="text-red-400 font-bold">0</span> Markah)</p>
+                <p><b>Status Ujian:</b> <span class="text-green-400 font-bold">TAMAT & LULUS 🎯</span></p>
+            </div>
+
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-green-500/50 mb-3">
+                <span class="text-[10px] text-gray-400 uppercase font-bold block">Markah Akhir Terkumpul</span>
+                <span id="res-score" class="text-2xl font-black text-green-400 mt-0.5">RM 100 = 100 Markah</span>
+            </div>
+
+            <div class="flex gap-2">
+                <button class="btn-modern flex-1" onclick="window.print()">
+                    <span class="btn-text text-xs"><i class="fa-solid fa-print"></i> Cetak Laporan</span>
+                </button>
+                <button class="btn-modern flex-1" onclick="location.reload()">
+                    <span class="btn-text text-xs"><i class="fa-solid fa-rotate-right"></i> Uji Semula</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Rain Overlay -->
+    <div id="victory-rain"></div>
+
+    <script>
+        /* Fail Audio Sebenar (MP3) */
+        const bgm = document.getElementById('bgm');
+        const clickSound = document.getElementById('click-sound');
+        const digSound = document.getElementById('dig-sound');
+        const winSound = document.getElementById('win-sound');
+        const coinsSound = document.getElementById('coins-sound');
+
+        let isMuted = false;
+        const jewelIcons = ['💎', '💰', '👑', '🪙', '✨', '💍', '💵'];
+
+        function playClick() {
+            if (!isMuted) { clickSound.currentTime = 0; clickSound.play().catch(()=>{}); }
+        }
+
+        function playDigSound() {
+            if (!isMuted) { digSound.currentTime = 0; digSound.play().catch(()=>{}); }
+        }
+
+        function playWinSound() {
+            if (!isMuted) {
+                winSound.play().catch(()=>{});
+            }
+        }
+
+        function triggerJewelRain() {
+            if (!isMuted) {
+                coinsSound.currentTime = 0;
+                coinsSound.play().catch(()=>{});
+            }
+            const victoryRain = document.getElementById('victory-rain');
+            victoryRain.innerHTML = '';
+            victoryRain.style.display = 'block';
+
+            // Menjadikan hujan wang & barang kemas jatuh dari atas skrin
+            for (let i = 0; i < 90; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div');
+                    c.className = 'coin'; 
+                    c.innerHTML = jewelIcons[Math.floor(Math.random() * jewelIcons.length)];
+                    c.style.left = Math.random() * 100 + 'vw';
+                    c.style.animationDuration = (Math.random() * 1.5 + 1.2) + 's';
+                    victoryRain.appendChild(c);
+                }, i * 20);
+            }
+
+            // Hentikan hujan automatik selepas 3.5 saat
+            setTimeout(() => {
+                victoryRain.style.display = 'none';
+            }, 3500);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            bgm.muted = isMuted;
+            document.getElementById('mute-icon').className = isMuted ? 'fa-solid fa-volume-xmark text-red-400' : 'fa-solid fa-volume-high text-yellow-400';
+        }
+
+        /* DATA PERMAINAN: 5 SUBTOPIK AKADEMIK TANPA KLU */
+        const stagesData = [
+            // PERINGKAT 1: LATAR BELAKANG RUKUN NEGARA
+            {
+                title: "Peringkat 1: Latar Belakang Rukun Negara",
+                desc: "Gali dan padankan kenyataan fakta sejarah Rukun Negara.",
+                slots: [
+                    { id: "s1", label: "TARIKH & PERISTIWA PENGISYTIHARAN DIRAJA", correctId: "c1" },
+                    { id: "s2", label: "BADAN PENTADBIRAN SELEPAS 13 MEI 1969", correctId: "c2" },
+                    { id: "s3", label: "JAWATANKUASA PENGGUBAL BAWAH MAPEN", correctId: "c3" },
+                    { id: "s4", label: "KOMPOSISI PERWAKILAN MAPEN", correctId: "c4" }
+                ],
+                cards: [
+                    { id: "c1", text: "Dimasyhurkan oleh YDPA Ke-4 bersempena dengan ulang tahun Hari Kebangsaan ke-13 pada 31 Ogos 1970." },
+                    { id: "c2", text: "Dibentuk selepas pentadbiran negara dijalankan oleh Majlis Gerakan Negara (MAGERAN)." },
+                    { id: "c3", text: "Dirangka oleh Jawatankuasa Rukun Negara di bawah Majlis Perundingan Negara (MAPEN) pada 4 Mac 1970." },
+                    { id: "c4", text: "Dianggotai oleh 66 orang wakil meliputi parti politik, kumpulan agama, guru, akhbar & perkhidmatan awam." }
+                ]
+            },
+
+            // PERINGKAT 2: SEBAB-SEBAB PENGENALAN RUKUN NEGARA
+            {
+                title: "Peringkat 2: Sebab-Sebab Pengenalan Rukun Negara",
+                desc: "Padankan fakta cabaran jurang dan pengasingan kaum sebelum Rukun Negara dibentuk.",
+                slots: [
+                    { id: "s1", label: "SEKTOR EKONOMI & PETEMPATAN ORANG MELAYU", correctId: "c1" },
+                    { id: "s2", label: "SEKTOR EKONOMI & PETEMPATAN ORANG CINA", correctId: "c2" },
+                    { id: "s3", label: "SEKTOR EKONOMI & PETEMPATAN ORANG INDIA", correctId: "c3" },
+                    { id: "s4", label: "KESAN PERBEZAAN FAHAMAN POLITIK", correctId: "c4" }
+                ],
+                cards: [
+                    { id: "c1", text: "Menjalankan kegiatan pertanian sara diri dan tinggal di kawasan kampung atau pedalaman." },
+                    { id: "c2", text: "Bekerja dalam sektor perlombongan serta perniagaan dan menetap di kawasan bandar." },
+                    { id: "c3", text: "Bekerja dalam sektor perladangan dan tinggal di kawasan ladang/estet." },
+                    { id: "c4", text: "Merenggangkan hubungan antara kaum sehingga mencetuskan rusuhan kaum pada 13 Mei 1969." }
+                ]
+            },
+
+            // PERINGKAT 3: UJIAN MAKNA 5 PRINSIP RUKUN NEGARA
+            {
+                title: "Peringkat 3: Ujian Makna 5 Prinsip Rukun Negara",
+                desc: "Menguji kefahaman MAKNA terperinci bagi kesemua 5 Prinsip Rukun Negara.",
+                slots: [
+                    { id: "s1", label: "MAKNA: KEPERCAYAAN KEPADA TUHAN", correctId: "c1" },
+                    { id: "s2", label: "MAKNA: KESETIAAN KEPADA RAJA DAN NEGARA", correctId: "c2" },
+                    { id: "s3", label: "MAKNA: KELUHURAN PERLEMBAGAAN", correctId: "c3" },
+                    { id: "s4", label: "MAKNA: KEDAULATAN UNDANG-UNDANG", correctId: "c4" },
+                    { id: "s5", label: "MAKNA: KESOPANAN DAN KESUSILAAN", correctId: "c5" }
+                ],
+                cards: [
+                    { id: "c1", text: "Agama pegangan utama; melahirkan rakyat menghormati amalan agama masyarakat lain & menyatupadukan kaum." },
+                    { id: "c2", text: "Memberikan sepenuh taat setia kepada YDPA sebagai Ketua Utama Negara bagi memupuk semangat patriotik." },
+                    { id: "c3", text: "Perlembagaan Persekutuan undang-undang tertinggi negara; tiada institusi dapat mengatasinya." },
+                    { id: "c4", text: "Setiap rakyat perlu menghormati dan mematuhi undang-undang bagi menjamin keharmonian & keselamatan." },
+                    { id: "c5", text: "Amalan nilai murni melambangkan keperibadian; membentuk masyarakat berdisiplin & berakhlak mulia." }
+                ]
+            },
+
+            // PERINGKAT 4: MATLAMAT RUKUN NEGARA
+            {
+                title: "Peringkat 4: Matlamat Rukun Negara",
+                desc: "Padankan 5 Matlamat Rukun Negara dengan huraiannya.",
+                slots: [
+                    { id: "s1", label: "MATLAMAT PERPADUAN", correctId: "c1" },
+                    { id: "s2", label: "MATLAMAT CARA HIDUP", correctId: "c2" },
+                    { id: "s3", label: "MATLAMAT KEMAKMURAN", correctId: "c3" },
+                    { id: "s4", label: "MATLAMAT KEBUDAYAAN", correctId: "c4" },
+                    { id: "s5", label: "MATLAMAT KEMAJUAN", correctId: "c5" }
+                ],
+                cards: [
+                    { id: "c1", text: "Mencapai perpaduan yang lebih erat dalam kalangan seluruh masyarakatnya." },
+                    { id: "c2", text: "Memelihara satu cara hidup demokrasi." },
+                    { id: "c3", text: "Menciptakan satu masyarakat yang adil di mana kemakmuran negara dinikmati bersama secara adil dan saksama." },
+                    { id: "c4", text: "Menjamin satu cara yang liberal terhadap tradisi-tradisi kebudayaannya yang kaya dan pelbagai corak." },
+                    { id: "c5", text: "Membina satu masyarakat progresif yang akan menggunakan sains dan teknologi moden." }
+                ]
+            },
+
+            // PERINGKAT 5: PERANAN RUKUN NEGARA DALAM KEHIDUPAN SEHARIAN
+            {
+                title: "Peringkat 5: Peranan Rukun Negara Dalam Kehidupan Seharian",
+                desc: "Padankan contoh amalan kehidupan seharian dengan peranan Rukun Negara.",
+                slots: [
+                    { id: "s1", label: "MERAIKAN KEPELBAGAIAN AGAMA", correctId: "c1" },
+                    { id: "s2", label: "MEMBENTUK MASYARAKAT PATRIOTIK", correctId: "c2" },
+                    { id: "s3", label: "MEMUPUK MENGHORMATI UNDANG-UNDANG", correctId: "c3" },
+                    { id: "s4", label: "MEMBENTUK JATI DIRI & NILAI MURNI", correctId: "c4" }
+                ],
+                cards: [
+                    { id: "c1", text: "Sentiasa bersyukur, rendah diri, serta mengelakkan perasaan dengki, khianat, rasuah dan keruntuhan moral." },
+                    { id: "c2", text: "Taat setia kepada negara dan menghormati lambang kedaulatan seperti Jalur Gemilang, Jata Negara & Negaraku." },
+                    { id: "c3", text: "Membimbing rakyat daripada terlibat dengan kegiatan jenayah yang menggugat keselamatan negara." },
+                    { id: "c4", text: "Membentuk individu berintegriti, berbudi pekerti mulia serta meletakkan kecemerlangan diri." }
+                ]
+            }
+        ];
+
+        let currentStageIdx = 0;
+        let score = 100;
+        let wrongAttempts = 0;
+        let foundCount = 0;
+        let studentName = "";
+        let studentClass = "";
+        let selectedCardEl = null;
+
+        function validateAndStart() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            const classInput = document.getElementById('student-class').value.trim();
+            if (!nameInput || !classInput) {
+                alert("Sila masukkan Nama Murid dan Kelas sebelum memulakan aktiviti penilaian!");
+                return;
+            }
+            studentName = nameInput; studentClass = classInput;
+            bgm.play().catch(()=>{});
+            startGame();
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            currentStageIdx = 0;
+            loadStage(currentStageIdx);
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = `RM ${score}`;
+        }
+
+        function loadStage(idx) {
+            const stage = stagesData[idx];
+            foundCount = 0;
+            selectedCardEl = null;
+
+            document.getElementById('stage-title').innerText = stage.title;
+            document.getElementById('stage-desc').innerText = stage.desc;
+            document.getElementById('stage-number').innerText = `${idx + 1} / ${stagesData.length}`;
+            document.getElementById('check-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('holding-area').innerHTML = '<span class="text-[10px] text-gray-400 italic" id="empty-holding-msg">Gali tanah untuk menemui kad fakta!</span>';
+            document.getElementById('question-prompt').innerText = "Gali tanah di bawah untuk mengeluarkan kad fakta ujian!";
+
+            initSlots(stage);
+            initDigArea(stage);
+        }
+
+        function initSlots(stage) {
+            const container = document.getElementById('drop-slots-container');
+            container.innerHTML = '';
+
+            stage.slots.forEach(slotData => {
+                const slot = document.createElement('div');
+                slot.className = 'drop-slot cursor-pointer';
+                slot.dataset.correctId = slotData.correctId;
+                slot.innerHTML = `
+                    <span class="text-[9px] md:text-[10px] font-black text-yellow-300 uppercase tracking-wider bg-slate-900/90 px-2 py-0.5 rounded-full border border-yellow-500/30 text-center w-full">
+                        ${slotData.label}
+                    </span>
+                    <div class="slot-content w-full flex justify-center items-center flex-1 my-0.5 min-h-[40px]">
+                        <span class="text-[9px] text-gray-400 italic">[ Letakkan Kad ]</span>
+                    </div>
+                `;
+
+                // Drag & Drop
+                slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+                slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+                slot.addEventListener('drop', e => {
+                    e.preventDefault(); slot.classList.remove('drag-over');
+                    const cardId = e.dataTransfer.getData('text/plain');
+                    const card = document.getElementById(cardId);
+                    if (card) placeCard(card, slot);
+                });
+
+                // Click / Tap Event
+                slot.addEventListener('click', () => {
+                    if (selectedCardEl) {
+                        placeCard(selectedCardEl, slot);
+                    }
+                });
+
+                container.appendChild(slot);
+            });
+        }
+
+        function initDigArea(stage) {
+            const moundContainer = document.getElementById('mounds-container');
+            moundContainer.innerHTML = '';
+            const shuffledCards = [...stage.cards].sort(() => Math.random() - 0.5);
+
+            shuffledCards.forEach(data => {
+                const mound = document.createElement('div');
+                mound.className = 'dirt-mound';
+                mound.onclick = (e) => dig(mound, data, e);
+                moundContainer.appendChild(mound);
+            });
+        }
+
+        function dig(mound, data, event) {
+            if (mound.classList.contains('loosening')) return;
+            playDigSound();
+            mound.classList.add('loosening');
+
+            // Kesan Animasi Percikan Harta Karun/Permata Keluar Dari Tanah
+            const rect = mound.getBoundingClientRect();
+            createJewelBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+            setTimeout(() => {
+                mound.style.visibility = 'hidden';
+                foundCount++;
+                createTreasureCard(data);
+                const emptyMsg = document.getElementById('empty-holding-msg');
+                if (emptyMsg) emptyMsg.remove();
+                checkSlotsFull();
+            }, 300);
+        }
+
+        function createJewelBurst(x, y) {
+            for (let i = 0; i < 15; i++) {
+                const jewel = document.createElement('div');
+                jewel.style.cssText = `position:fixed; z-index:999; font-size:24px; left:${x}px; top:${y}px; pointer-events:none;`;
+                jewel.innerHTML = jewelIcons[Math.floor(Math.random() * jewelIcons.length)];
+                document.body.appendChild(jewel);
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 60 + Math.random() * 90;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist - 80;
+
+                jewel.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0 }
+                ], { duration: 650, easing: 'ease-out' }).onfinish = () => jewel.remove();
+            }
+        }
+
+        function createTreasureCard(data) {
+            const card = document.createElement('div');
+            card.className = 'treasure-card w-full text-slate-900';
+            card.draggable = true;
+            card.id = 'card-' + data.id;
+            card.dataset.cardId = data.id;
+
+            card.innerHTML = `
+                <p class="text-[10px] font-bold text-slate-800 leading-snug">${data.text}</p>
+            `;
+
+            card.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', card.id);
+                selectCard(card);
+            });
+
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectCard(card);
+            });
+
+            document.getElementById('holding-area').appendChild(card);
+        }
+
+        function selectCard(card) {
+            if (selectedCardEl) selectedCardEl.classList.remove('selected-card');
+            selectedCardEl = card;
+            selectedCardEl.classList.add('selected-card');
+            playClick();
+        }
+
+        function placeCard(card, slot) {
+            const existing = slot.querySelector('.treasure-card');
+            if (existing) document.getElementById('holding-area').appendChild(existing);
+
+            const slotContent = slot.querySelector('.slot-content');
+            slotContent.innerHTML = '';
+            slotContent.appendChild(card);
+            slot.classList.add('filled');
+
+            if (selectedCardEl) {
+                selectedCardEl.classList.remove('selected-card');
+                selectedCardEl = null;
+            }
+            playClick();
+            checkSlotsFull();
+        }
+
+        function checkSlotsFull() {
+            const slots = document.querySelectorAll('.drop-slot');
+            let filled = true;
+            const currentStage = stagesData[currentStageIdx];
+            slots.forEach(s => { if (!s.querySelector('.treasure-card')) filled = false; });
+            const btn = document.getElementById('check-btn');
+            if (filled && foundCount === currentStage.cards.length) {
+                btn.style.display = 'inline-flex';
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        function checkAnswers() {
+            const slots = document.querySelectorAll('.drop-slot');
+            const currentStage = stagesData[currentStageIdx];
+            let correctCount = 0;
+            let wrongInThisCheck = 0;
+
+            slots.forEach(slot => {
+                const card = slot.querySelector('.treasure-card');
+                if (card && card.dataset.cardId == slot.dataset.correctId) {
+                    slot.classList.add('correct-anim');
+                    slot.classList.remove('wrong-anim');
+                    card.draggable = false;
+                    correctCount++;
+                } else if (card) {
+                    slot.classList.add('wrong-anim');
+                    wrongInThisCheck++;
+                    setTimeout(() => {
+                        slot.classList.remove('wrong-anim');
+                        document.getElementById('holding-area').appendChild(card);
+                        slot.querySelector('.slot-content').innerHTML = '<span class="text-[9px] text-gray-400 italic">[ Letakkan Kad ]</span>';
+                        slot.classList.remove('filled');
+                        checkSlotsFull();
+                    }, 800);
+                }
+            });
+
+            if (wrongInThisCheck > 0) {
+                const deduction = wrongInThisCheck * 2;
+                score = Math.max(0, score - deduction);
+                wrongAttempts += wrongInThisCheck;
+                updateScoreDisplay();
+                alert(`Terdapat ${wrongInThisCheck} jawapan yang salah! Markah anda ditolak RM ${deduction} (-${deduction} Markah). Skor semasa: RM ${score}`);
+            } else if (correctCount === currentStage.cards.length) {
+                document.getElementById('check-btn').style.display = 'none';
+                document.getElementById('question-prompt').innerText = "TAHNIAH! Kesemua padanan fakta subtopik ini TEPAT! 💰";
+
+                // PANGGILAN ANIMASI HUJAN SYILING & PERMATA SETIAP KALI BETUL SEMUA
+                triggerJewelRain();
+
+                if (currentStageIdx < stagesData.length - 1) {
+                    document.getElementById('next-btn').style.display = 'inline-flex';
+                } else {
+                    win();
+                }
+            }
+        }
+
+        function nextStage() {
+            currentStageIdx++;
+            loadStage(currentStageIdx);
+        }
+
+        function win() {
+            playWinSound();
+            document.getElementById('res-name').innerText = studentName;
+            document.getElementById('res-class').innerText = studentClass;
+            document.getElementById('res-wrong').innerText = wrongAttempts;
+            document.getElementById('res-deduction').innerText = wrongAttempts * 2;
+            document.getElementById('res-score').innerText = `RM ${score} = ${score} Markah`;
+
+            setTimeout(() => {
+                document.getElementById('assessment-modal').style.display = 'flex';
+            }, 1800);
+        }
+    </script>
+</body>
+</html>
